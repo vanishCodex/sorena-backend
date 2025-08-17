@@ -25,10 +25,20 @@ mongoose.connect(process.env.MONGO_URI)
     process.exit(1);
   });
 
-// تنظیمات CORS فقط یک بار
+/** ✅ تنظیمات CORS */
+const allowedOrigins = ['https://www.sorena-darman.com', 'http://localhost:5173'];
+
 app.use(cors({
-  origin: ['https://www.sorena-darman.com', 'http://localhost:5173'],
-  credentials: true
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.set('trust proxy', 1);
@@ -94,8 +104,13 @@ app.get('/requests', async (req, res) => {
   }
 });
 
+/** 🧪 مسیر تست سلامت سرور */
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'سرور فعال است' });
+});
+
 /** 🚀 راه‌اندازی سرور */
 app.listen(PORT, () => {
   console.log(`✅ Server Active on Port ${PORT}`);
   console.log(`🔗 Address: http://localhost:${PORT}`);
-}) ;
+});
