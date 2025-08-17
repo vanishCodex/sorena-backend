@@ -1,5 +1,7 @@
 const path = require('path');
-require('dotenv').config(); // فایل .env در همان فولدر server
+const jwt = require('jsonwebtoken');
+const verifyAdmin = require('./verifyAdmin');
+require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -17,24 +19,49 @@ console.log("🔗 MONGO_URI =", process.env.MONGO_URI);
 
 // اتصال به MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected "))
+  .then(() => console.log("✅ MongoDB connected"))
   .catch(err => {
-    console.error("❌  MongoDB  Error :", err);
-    process.exit(1); // سرور را متوقف می‌کند اگر اتصال برقرار نشد
+    console.error("❌ MongoDB Error:", err);
+    process.exit(1);
   });
-app.use(cors({ origin: ['https://www.sorena-darman.com' , 'http://localhost:5173'],  }));
+
+// تنظیمات CORS فقط یک بار
+app.use(cors({
+  origin: ['https://www.sorena-darman.com', 'http://localhost:5173'],
+  credentials: true
+}));
+
 app.set('trust proxy', 1);
-app.use(cors());
 app.use(bodyParser.json());
 
-// روت ذخیره فرم
+/** 🔐 مسیر لاگین ادمین */
+app.post('/admin/login', (req, res) => {
+  const { username, password } = req.body;
+
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = process.env.ADMIN_PASS;
+
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '2h' });
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ success: false, message: 'نام کاربری یا رمز اشتباه است' });
+  }
+});
+
+/** 🛡️ مسیر محافظت‌شده داشبورد */
+app.get('/admin/dashboard', verifyAdmin, (req, res) => {
+  res.json({ success: true, message: 'خوش آمدید ادمین عزیز!' });
+});
+
+/** 📥 ذخیره فرم */
 app.post('/submit', async (req, res) => {
   try {
-    console.log("داده دریافتی:", req.body);
+    console.log("📨 داده دریافتی:", req.body);
 
     const { name, phone, description } = req.body;
     const ip = req.headers['x-forwarded-for'] || req.ip;
-    // چک کردن rate limit بر اساس IP
+
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
     const recentRequest = await Request.findOne({ ip, createdAt: { $gte: fifteenMinutesAgo } });
 
@@ -56,7 +83,7 @@ app.post('/submit', async (req, res) => {
   }
 });
 
-// روت گرفتن لیست درخواست‌ها
+/** 📋 دریافت لیست درخواست‌ها */
 app.get('/requests', async (req, res) => {
   try {
     const requests = await Request.find().sort({ createdAt: -1 });
@@ -67,8 +94,8 @@ app.get('/requests', async (req, res) => {
   }
 });
 
-// راه‌اندازی سرور
+/** 🚀 راه‌اندازی سرور */
 app.listen(PORT, () => {
-  console.log(`✅ server Active Port${PORT}`);
-  console.log(`🔗 address : http://localhost:${PORT}`);
+  console.log(`✅ Server Active on Port ${PORT}`);
+  console.log(`🔗 Address: http://localhost:${PORT}`);
 });
