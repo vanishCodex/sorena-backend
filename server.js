@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.error("❌  MongoDB  Error :", err);
     process.exit(1); // سرور را متوقف می‌کند اگر اتصال برقرار نشد
   });
-app.use(cors({ origin: 'https://www.sorena-darman.com' }));
+app.use(cors({ origin: ['https://www.sorena-darman.com' , 'http://localhost:5173/'],  }));
 app.set('trust proxy', 1);
 app.use(cors());
 app.use(bodyParser.json());
