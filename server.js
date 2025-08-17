@@ -98,4 +98,4 @@ app.get('/requests', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server Active on Port ${PORT}`);
   console.log(`🔗 Address: http://localhost:${PORT}`);
-});
+}) ;
