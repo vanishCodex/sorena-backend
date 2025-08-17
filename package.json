@@ -1,6 +1,5 @@
 {
     "name": "nurse-form-server",
-    
     "version": "1.0.0",
     "main": "server.js",
     "type": "commonjs",
@@ -13,8 +12,6 @@
         "dotenv": "^16.6.1",
         "express": "^4.21.2",
         "mongodb": "^6.18.0",
-        "mongoose": "^8.17.1" ,
-        "proxy": "http://localhost:5002" 
-
+        "mongoose": "^8.17.1"
     }
 }
